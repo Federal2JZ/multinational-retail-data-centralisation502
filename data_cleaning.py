@@ -1,3 +1,6 @@
+import pandas as pd
+
+
 class DataCleaning:
     def __init__(self):
         pass
@@ -12,6 +15,10 @@ class DataCleaning:
     
     def clean_s3_data(self, raw_data):
         # Method to clean data extracted from an S3 bucket
+        pass
+
+    def clean_user_data(self, user_data):
+        # Method to clean user data
         pass
 
 if __name__ == "__main__":
