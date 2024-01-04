@@ -1,27 +1,40 @@
 from database_utils import DatabaseConnector
 from data_extraction import DataExtractor
 from data_cleaning import DataCleaning
+import psycopg2
 
-# Step 2: Create instances
-db_connector = DatabaseConnector("sales_data", "postgres", "admin123", "localhost")
-data_extractor = DataExtractor()
-data_cleaner = DataCleaning()
 
-# Step 3: Connect to the database
-db_connector.connect()
+host = 'localhost'
+port = '5432'
+database = 'sales_data'
+user = 'postgres'
+password = 'admin123'
 
-# Step 4: List tables in the database
-tables = db_connector.list_db_tables()
-print("Tables in the database:", tables)
+# Construct the connection string
+connection_string = f"host={host} port={port} dbname={database} user={user} password={password}"
 
-# Step 5: Read user data from the RDS database
-user_data = data_extractor.read_rds_table(db_connector, "dim_users")
+try:
+    # Connect to the PostgreSQL database
+    connection = psycopg2.connect(connection_string)
 
-# Step 6: Clean user data
-cleaned_user_data = data_cleaner.clean_user_data(user_data)
+    # Create a cursor object for executing SQL queries
+    cursor = connection.cursor()
 
-# Step 7: Upload cleaned user data to the database
-db_connector.upload_to_db(cleaned_user_data, "dim_users")
+    # Example: Execute a SQL query
+    cursor.execute("SELECT * FROM dim_users;")
+    
+    # Fetch the result
+    result = cursor.fetchall()
+    print("Query Result:")
+    for row in result:
+        print(row)
 
-# Step 8: Close the database connection
-db_connector.close_connection()
+except Exception as e:
+    print(f"Error: {e}")
+
+finally:
+    # Close the cursor and connection
+    if cursor:
+        cursor.close()
+    if connection:
+        connection.close()
