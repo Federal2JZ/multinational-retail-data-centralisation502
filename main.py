@@ -1,40 +1,22 @@
-from database_utils import DatabaseConnector
 from data_extraction import DataExtractor
 from data_cleaning import DataCleaning
-import psycopg2
+from database_utils import DatabaseConnector
 
 
-host = 'localhost'
-port = '5432'
-database = 'sales_data'
-user = 'postgres'
-password = 'admin123'
+def dim_users():
+    db_connector = DatabaseConnector()
+    data_cleaning = DataCleaning()
+    data_extractor = DataExtractor()
 
-# Construct the connection string
-connection_string = f"host={host} port={port} dbname={database} user={user} password={password}"
+    # Read legacy_users data from the database
+    legacy_users_table_name = "legacy_users"
+    legacy_users_data = data_extractor.read_rds_table(db_connector, legacy_users_table_name)
 
-try:
-    # Connect to the PostgreSQL database
-    connection = psycopg2.connect(connection_string)
+    # Clean legacy_users data
+    cleaned_legacy_users_data = data_cleaning.clean_user_data(legacy_users_data)
 
-    # Create a cursor object for executing SQL queries
-    cursor = connection.cursor()
+    # Upload cleaned legacy_users data to the database
+    db_connector.upload_to_db(cleaned_legacy_users_data, table_name='dim_users')
 
-    # Example: Execute a SQL query
-    cursor.execute("SELECT * FROM dim_users;")
-    
-    # Fetch the result
-    result = cursor.fetchall()
-    print("Query Result:")
-    for row in result:
-        print(row)
-
-except Exception as e:
-    print(f"Error: {e}")
-
-finally:
-    # Close the cursor and connection
-    if cursor:
-        cursor.close()
-    if connection:
-        connection.close()
+if __name__ == "__main__":
+    dim_users()
