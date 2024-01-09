@@ -1,2 +1,4 @@
 /db_creds.yaml
 /__pycache__
+/.vscode
+/sales_data.session.sql
