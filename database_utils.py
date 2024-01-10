@@ -4,8 +4,8 @@ from sqlalchemy import create_engine, inspect
 
 
 class DatabaseConnector():
-    def __init__(self,file_name = None):
-        self.file_name = file_name
+    def __init__(self):
+        self.file_name = "db_creds.yaml"
 
     def read_db_creds(self):
         with open(self.file_name) as f:
