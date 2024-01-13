@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-
+import re
 
 class DataCleaning:
     def __init__(self, dataframe=None):
@@ -41,5 +41,55 @@ class DataCleaning:
 
         # Drop rows with invalid date_payment_confirmed
         cleaned_data = cleaned_data.dropna(subset=['date_payment_confirmed'])
+
+        return cleaned_data
+    
+    def clean_store_data(self, stores_data):
+        # Drop duplicates if necessary
+        cleaned_data = stores_data.drop_duplicates()
+
+        # Remove the "lat" column because its duplicate and empty
+        cleaned_data = cleaned_data.drop(columns=['lat'])
+
+        # Replace "NULL" strings with NaN
+        cleaned_data.replace('NULL', np.nan, inplace=True)
+
+        # Drop rows where all columns have NaN or empty string values
+        cleaned_data.dropna(how='all', inplace=True)
+        cleaned_data.replace('', np.nan, inplace=True)
+        cleaned_data.dropna(how='all', inplace=True)
+
+        # Define a regular expression pattern for random alphanumeric strings and apply the pattern check to each cell in the DataFrame
+        random_pattern = re.compile(r'^[A-Za-z]{3}-[0-9]{2}-[A-Za-z]{3}$')
+        random_mask = cleaned_data.apply(lambda x: x.map(lambda val: bool(random_pattern.match(str(val)))))
+
+        # Drop rows where all columns have random alphanumeric strings
+        cleaned_data = cleaned_data[~random_mask.all(axis=1)]
+
+        # Convert 'latitude' to numeric, replacing non-numeric values with NaN
+        cleaned_data['latitude'] = pd.to_numeric(cleaned_data['latitude'], errors='coerce')
+
+        # Convert 'opening_date' to datetime, handling different date formats
+        cleaned_data['opening_date'] = pd.to_datetime(cleaned_data['opening_date'], errors='coerce')
+
+        # Convert 'longitude' to numeric, handling non-numeric values
+        cleaned_data['longitude'] = pd.to_numeric(cleaned_data['longitude'], errors='coerce')
+
+        # Specify data types for each column
+        data_types = {
+            "address": "object",
+            "longitude": "float64",
+            "locality": "object",
+            "store_code": "object",
+            "staff_numbers": "object",
+            "opening_date": "datetime64[ns]",
+            "store_type": "object",
+            "latitude": "float64",
+            "country_code": "object",
+            "continent": "object",
+        }
+        
+        # Convert columns to their specified data types
+        cleaned_data = cleaned_data.astype(data_types)
 
         return cleaned_data
