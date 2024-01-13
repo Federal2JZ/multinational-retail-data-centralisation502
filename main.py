@@ -35,6 +35,32 @@ def dim_card_details():
     # Upload cleaned card details data to the database
     db_connector.upload_to_db(cleaned_card_details_data, 'dim_card_details')
 
+def dim_stores():
+    data_extractor = DataExtractor()
+    database_connector = DatabaseConnector()
+    data_cleaning = DataCleaning()
+
+    # API details
+    number_of_stores_endpoint = "https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores"
+    retrieve_store_endpoint = "https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details"
+    api_key = {'x-api-key': 'yFBQbwXe9J3sd6zWVAMrK6lcxxr0q1lr2PT6DDMX'}
+
+    # List the number of stores
+    num_stores = data_extractor.list_number_of_stores(number_of_stores_endpoint, api_key)
+
+    if num_stores is not None:
+        print(f"Number of stores: {num_stores}")
+
+        # Retrieve store data
+        stores_data = data_extractor.retrieve_stores_data(retrieve_store_endpoint, api_key, num_stores)
+
+        # Clean store data
+        cleaned_store_data = data_cleaning.clean_store_data(stores_data)
+
+        # Upload cleaned store data to the database
+        database_connector.upload_to_db(cleaned_store_data, 'dim_store_details')
+
 if __name__ == "__main__":
+    dim_stores()
     dim_card_details()
     dim_users()
