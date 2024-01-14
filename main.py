@@ -60,7 +60,27 @@ def dim_stores():
         # Upload cleaned store data to the database
         database_connector.upload_to_db(cleaned_store_data, 'dim_store_details')
 
+def dim_products():
+    db_connector = DatabaseConnector()
+    data_extractor = DataExtractor()
+    data_cleaning = DataCleaning()
+
+    # Extract data from S3
+    products_data = data_extractor.extract_from_s3('s3://data-handling-public/products.csv')
+    products_data = data_cleaning.convert_product_weights(products_data)
+
+    # Data Cleaning - Convert Product Weights
+    products_data = data_cleaning.convert_product_weights(products_data)
+
+    # Data Cleaning - Clean Products Data
+    products_data = data_cleaning.clean_products_data(products_data)
+
+    # Upload cleaned products data to the database
+    db_connector.upload_to_db(products_data, 'dim_products')
+
+
 if __name__ == "__main__":
     dim_stores()
     dim_card_details()
     dim_users()
+    dim_products()
