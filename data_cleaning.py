@@ -93,3 +93,38 @@ class DataCleaning:
         cleaned_data = cleaned_data.astype(data_types)
 
         return cleaned_data
+    
+    def convert_product_weights(self, products_df):
+        def convert_weight(weight):
+            try:
+                unit_factors = {'g': 1, 'ml': 0.001, 'k': 1000}
+                return float(weight) if isinstance(weight, (int, float)) else float(weight[:-1]) * unit_factors.get(weight[-1], 1)
+            except (ValueError, TypeError):
+                return None
+
+        products_df['weight'] = products_df['weight'].apply(convert_weight)
+        return products_df
+    
+    def clean_products_data(self, products_df):
+        # Drop the first column (Unnamed: 0)
+        products_df = products_df.iloc[:, 1:]
+        
+        # Remove leading/trailing whitespaces in all string columns
+        products_df = products_df.apply(lambda x: x.str.strip() if x.dtype == "O" else x)
+
+        # Convert 'product_price' column to numeric
+        products_df['product_price'] = pd.to_numeric(products_df['product_price'].str.replace('£', ''), errors='coerce')
+
+        # Ensure 'weight' column is treated as string before numeric conversion
+        products_df['weight'] = pd.to_numeric(products_df['weight'].astype(str).str.replace('kg', '').str.replace('g', '').str.replace('ml', '').str.replace(' ', ''), errors='coerce')
+
+        # Convert 'date_added' column to datetime
+        products_df['date_added'] = pd.to_datetime(products_df['date_added'], errors='coerce')
+
+        # Handle 'removed' column
+        products_df['removed'] = products_df['removed'].apply(lambda x: False if pd.notna(x) and 'Still_avaliable' in str(x) else True)
+
+        # Drop rows with missing or invalid values
+        cleaned_df = products_df.dropna(subset=['product_name', 'product_price', 'weight', 'category', 'EAN', 'date_added', 'uuid', 'removed', 'product_code'])
+
+        return cleaned_df
