@@ -1,7 +1,8 @@
 import pandas as pd
 import tabula as tb
 import requests
-
+import boto3
+import os
 
 class DataExtractor():
     def __init__(self, database_connector_instance=None, table_name=None):
@@ -44,3 +45,32 @@ class DataExtractor():
 
         stores_df = pd.DataFrame(stores_data)
         return stores_df
+    
+    def extract_from_s3(self, s3_address):
+        s3_client = boto3.client('s3')
+        products_data = None
+
+        # Parse the S3 address
+        bucket_name, key = s3_address.split('//')[1].split('/', 1)
+        
+        # Download the file from S3
+        local_file_name = 'products.csv'
+        s3_client.download_file(bucket_name, key, local_file_name)
+        
+        # Read the CSV into a DataFrame
+        products_data = pd.read_csv(local_file_name)
+
+            # # Print the shape of the DataFrame
+            # print("Products Data Shape:", products_data.shape)
+
+            # # Print information about the DataFrame after cleaning
+            # print("Products Data Information:")
+            # print(products_data.info())
+
+        # Clean up: Close the local file
+        products_data.to_csv(local_file_name, index=False)  # Save the cleaned DataFrame
+        products_data = pd.read_csv(local_file_name)  # Re-read the cleaned DataFrame
+        # Remove the local file
+        os.remove(local_file_name)
+
+        return products_data
