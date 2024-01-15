@@ -78,9 +78,33 @@ def dim_products():
     # Upload cleaned products data to the database
     db_connector.upload_to_db(products_data, 'dim_products')
 
+    
+def dim_orders():
+    db_connector = DatabaseConnector()
+    data_extractor = DataExtractor()
+
+    # Step 1: List all tables in the database
+    tables = db_connector.list_db_tables()
+    print("Tables in the database:", tables)
+
+    # Step 2: Extract orders data
+    orders_table_name = 'orders_table'
+    orders_data = data_extractor.read_rds_table(db_connector, orders_table_name)
+
+    # Initialize DataCleaning instance with orders_data
+    data_cleaning = DataCleaning(orders_data)
+
+    # Step 3: Clean orders data
+    cleaned_orders_data = data_cleaning.clean_orders_data(orders_data)
+
+    # Step 4: Upload cleaned orders data to the database
+    target_table_name = 'orders_table'
+    db_connector.upload_to_db(cleaned_orders_data, target_table_name)
+
 
 if __name__ == "__main__":
-    dim_stores()
-    dim_card_details()
-    dim_users()
-    dim_products()
+    # dim_stores()
+    # dim_card_details()
+    # dim_users()
+    # dim_products()
+    dim_orders()
