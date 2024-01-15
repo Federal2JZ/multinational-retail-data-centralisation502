@@ -23,7 +23,6 @@ This project addresses the need of a multinational company to centralize its sal
     ```
 
 ## File Structure
-
 ```plaintext
 multinational-retail-data-centralisation502/
 │
@@ -33,7 +32,7 @@ multinational-retail-data-centralisation502/
 ├── database_utils.py
 ├── main.py
 └── README.md
-
+```
 ## License
 Accessed via the AiCore programme.
 
