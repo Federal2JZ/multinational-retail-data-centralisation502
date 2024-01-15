@@ -128,3 +128,13 @@ class DataCleaning:
         cleaned_df = products_df.dropna(subset=['product_name', 'product_price', 'weight', 'category', 'EAN', 'date_added', 'uuid', 'removed', 'product_code'])
 
         return cleaned_df
+    
+    def clean_orders_data(self, orders_df):
+        # Drop the 'level_0' column if it exists
+        cleaned_orders_data = orders_df.drop(columns=['level_0'], errors='ignore')
+
+        # Remove first_name and last_name columns
+        columns_to_remove = ['first_name', 'last_name', '1']
+        cleaned_orders_data = cleaned_orders_data.drop(columns=columns_to_remove, errors='ignore')
+
+        return cleaned_orders_data
