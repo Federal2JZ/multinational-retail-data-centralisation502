@@ -138,3 +138,34 @@ class DataCleaning:
         cleaned_orders_data = cleaned_orders_data.drop(columns=columns_to_remove, errors='ignore')
 
         return cleaned_orders_data
+    
+    def clean_date_times_data(self, date_details_data):
+        # Convert dictionary to a DataFrame
+        cleaned_date_details_data = pd.DataFrame.from_dict(date_details_data)
+
+        # Concatenate 'year', 'month', 'day', and 'timestamp' columns
+        cleaned_date_details_data['datetime'] = cleaned_date_details_data['year'] + '-' + cleaned_date_details_data['month'] + '-' + cleaned_date_details_data['day'] + ' ' + cleaned_date_details_data['timestamp']
+
+        # Convert 'datetime' column to datetime format
+        cleaned_date_details_data['datetime'] = pd.to_datetime(cleaned_date_details_data['datetime'], format='%Y-%m-%d %H:%M:%S', errors='coerce')
+
+        # Drop rows with invalid datetime values
+        cleaned_date_details_data = cleaned_date_details_data.dropna(subset=['datetime'])
+
+        # Extract components and convert to appropriate datatypes
+        cleaned_date_details_data['month'] = cleaned_date_details_data['datetime'].dt.month.astype('Int64')
+        cleaned_date_details_data['year'] = cleaned_date_details_data['datetime'].dt.year.astype('Int64')
+        cleaned_date_details_data['day'] = cleaned_date_details_data['datetime'].dt.day.astype('Int64')
+
+        # Define time periods
+        time_periods = {
+            (0, 6): 'Late_Hours',
+            (6, 12): 'Morning',
+            (12, 18): 'Midday',
+            (18, 24): 'Evening'
+        }
+
+        # Categorize time periods based on hour
+        cleaned_date_details_data['time_period'] = pd.cut(cleaned_date_details_data['datetime'].dt.hour, bins=[0, 6, 12, 18, 24], labels=[period for _, period in time_periods.items()])
+
+        return cleaned_date_details_data
