@@ -1,6 +1,8 @@
 from data_extraction import DataExtractor
 from data_cleaning import DataCleaning
 from database_utils import DatabaseConnector
+import requests
+import json
 
 
 def dim_users():
@@ -101,10 +103,25 @@ def dim_orders():
     target_table_name = 'orders_table'
     db_connector.upload_to_db(cleaned_orders_data, target_table_name)
 
+def dim_date_times():
+    db_connector = DatabaseConnector()
+    data_cleaning = DataCleaning()
+
+    # Fetch data from the JSON file using requests
+    json_url = 'https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json'
+    response = requests.get(json_url)
+    date_details_data = json.loads(response.text)
+
+    # Clean date details data
+    cleaned_date_details_data = data_cleaning.clean_date_times_data(date_details_data)
+
+    # Upload cleaned date details data to the database
+    db_connector.upload_to_db(cleaned_date_details_data, 'dim_date_times')
 
 if __name__ == "__main__":
     # dim_stores()
     # dim_card_details()
     # dim_users()
     # dim_products()
-    dim_orders()
+    # dim_orders()
+    dim_date_times()
