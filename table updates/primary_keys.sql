@@ -1,6 +1,6 @@
 -- Add primary keys in dim_tables
 ALTER TABLE dim_card_details
-	ADD CONSTRAINT pk_card_nuber PRIMARY KEY (card_number);
+	ADD CONSTRAINT pk_card_number PRIMARY KEY (card_number);
 	
 ALTER TABLE dim_date_times
 	ADD PRIMARY KEY (date_uuid);
