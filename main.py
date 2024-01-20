@@ -14,10 +14,8 @@ def dim_users():
     legacy_users_data = data_extractor.read_rds_table(db_connector, legacy_users_table_name)
 
     # Initialize DataCleaning instance with the legacy_users_data
-    data_cleaning = DataCleaning(legacy_users_data)
-
-    # Clean legacy_users data by calling the clean_user_data method
-    cleaned_legacy_users_data = data_cleaning.clean_user_data()
+    data_cleaning = DataCleaning()
+    cleaned_legacy_users_data = data_cleaning.clean_user_data(legacy_users_data)
 
     # Upload cleaned legacy_users data to the database
     db_connector.upload_to_db(cleaned_legacy_users_data, table_name='dim_users')
@@ -31,8 +29,8 @@ def dim_card_details():
     pdf_data = data_extractor.retrieve_pdf_data('https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf')
 
     # Clean card details data
-    data_cleaning = DataCleaning(pdf_data)
-    cleaned_card_details_data = data_cleaning.clean_card_data()
+    data_cleaning = DataCleaning()
+    cleaned_card_details_data = data_cleaning.clean_card_data(pdf_data)
 
     # Upload cleaned card details data to the database
     db_connector.upload_to_db(cleaned_card_details_data, 'dim_card_details')
@@ -85,21 +83,21 @@ def dim_orders():
     db_connector = DatabaseConnector()
     data_extractor = DataExtractor()
 
-    # Step 1: List all tables in the database
+    # List all tables in the database
     tables = db_connector.list_db_tables()
     print("Tables in the database:", tables)
 
-    # Step 2: Extract orders data
+    # Extract orders data
     orders_table_name = 'orders_table'
     orders_data = data_extractor.read_rds_table(db_connector, orders_table_name)
 
     # Initialize DataCleaning instance with orders_data
     data_cleaning = DataCleaning(orders_data)
 
-    # Step 3: Clean orders data
+    # Clean orders data
     cleaned_orders_data = data_cleaning.clean_orders_data(orders_data)
 
-    # Step 4: Upload cleaned orders data to the database
+    # Upload cleaned orders data to the database
     target_table_name = 'orders_table'
     db_connector.upload_to_db(cleaned_orders_data, target_table_name)
 
@@ -119,9 +117,9 @@ def dim_date_times():
     db_connector.upload_to_db(cleaned_date_details_data, 'dim_date_times')
 
 if __name__ == "__main__":
-    # dim_stores()
-    # dim_card_details()
-    # dim_users()
-    # dim_products()
-    # dim_orders()
+    dim_stores()
+    dim_card_details()
+    dim_users()
+    dim_products()
+    dim_orders()
     dim_date_times()
