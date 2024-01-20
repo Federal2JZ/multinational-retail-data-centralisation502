@@ -41,6 +41,7 @@ multinational-retail-data-centralisation502/
 ├── database_utils.py               # Python script with utility functions for database operations
 ├── main.py                         # Main Python script for running the project
 └── README.md                       # Project documentation
+```
 ## License
 Accessed via the AiCore programme.
 
