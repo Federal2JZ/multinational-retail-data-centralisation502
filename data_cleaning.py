@@ -1,99 +1,75 @@
 import pandas as pd
 import numpy as np
-import re
+
 
 class DataCleaning:
     def __init__(self, dataframe=None):
         self.dataframe = dataframe
 
-    def clean_user_data(self):
-        if self.dataframe is None:
-            raise ValueError("DataFrame not provided to DataCleaning instance")
+    # Clean legacy user data
+    def clean_user_data(self, legacy_users_table):
+        legacy_users_table = legacy_users_table.copy()  # not to get warning SettingWithCopyWarning
 
         # Replace 'NULL' values with NaN
-        self.dataframe = self.dataframe.replace('NULL', np.nan)
+        legacy_users_table.replace('NULL', np.NaN, inplace=True)
+
+        # Drop rows with missing values in key columns
+        legacy_users_table.dropna(subset=['date_of_birth', 'email_address', 'user_uuid'], how='any', axis=0, inplace=True)
 
         # Convert date columns to datetime format
-        date_columns = ['date_of_birth', 'join_date']
-        self.dataframe[date_columns] = self.dataframe[date_columns].apply(pd.to_datetime, errors='coerce')
+        legacy_users_table['date_of_birth'] = pd.to_datetime(legacy_users_table['date_of_birth'], errors='ignore')
+        legacy_users_table['join_date'] = pd.to_datetime(legacy_users_table['join_date'], errors='coerce')
 
-        # Drop rows with incorrect or missing values in key columns
-        key_columns = ['first_name', 'last_name', 'user_uuid']
-        self.dataframe = self.dataframe.dropna(subset=key_columns)
+        # Drop rows with missing values in the 'join_date' column
+        legacy_users_table = legacy_users_table.dropna(subset=['join_date'])
 
-        # Remove rows where date_of_birth is in the future
-        self.dataframe = self.dataframe[self.dataframe['date_of_birth'] <= pd.Timestamp.now()]
+        # Clean 'phone_number' column
+        legacy_users_table['phone_number'] = legacy_users_table['phone_number'].str.replace('/W', '')
 
-        return self.dataframe
+        # Remove duplicate entries based on 'email_address'
+        legacy_users_table = legacy_users_table.drop_duplicates(subset=['email_address'])
 
-    def clean_card_data(self):
-        if self.dataframe is None:
-            raise ValueError("DataFrame not provided to DataCleaning instance")
+        # Drop the first column (index column)
+        legacy_users_table.drop(legacy_users_table.columns[0], axis=1, inplace=True)
 
-        # Remove rows with 'NULL' in card_number
-        cleaned_data = self.dataframe[self.dataframe['card_number'] != 'NULL'].copy()
-
-        # Convert expiry_date to datetime format with specified format
-        cleaned_data.loc[:, 'expiry_date'] = pd.to_datetime(cleaned_data['expiry_date'], format='%m/%y', errors='coerce')
-
-        # Validate date_payment_confirmed using the validate function
-        cleaned_data.loc[:, 'date_payment_confirmed'] = pd.to_datetime(cleaned_data['date_payment_confirmed'], errors='coerce')
-
-        # Drop rows with invalid date_payment_confirmed
-        cleaned_data = cleaned_data.dropna(subset=['date_payment_confirmed'])
-
-        return cleaned_data
+        return legacy_users_table 
     
-    def clean_store_data(self, stores_data):
-        # Drop duplicates if necessary
-        cleaned_data = stores_data.drop_duplicates()
+    # Clean card data
+    def clean_card_data(self, card_data_table):
+        # Replace 'NULL' values with NaN
+        card_data_table.replace('NULL', np.NaN, inplace=True)
 
-        # Remove the "lat" column because its duplicate and empty
-        cleaned_data = cleaned_data.drop(columns=['lat'])
+        # Drop rows with missing values in the 'card_number' column
+        card_data_table.dropna(subset=['card_number'], how='any', axis=0, inplace=True)
 
-        # Replace "NULL" strings with NaN
-        cleaned_data.replace('NULL', np.nan, inplace=True)
+        # Remove rows where 'card_number' contains letters or '?'
+        card_data_table = card_data_table[~card_data_table['card_number'].str.contains('[a-zA-Z?]', na=False)]
 
-        # Drop rows where all columns have NaN or empty string values
-        cleaned_data.dropna(how='all', inplace=True)
-        cleaned_data.replace('', np.nan, inplace=True)
-        cleaned_data.dropna(how='all', inplace=True)
-
-        # Define a regular expression pattern for random alphanumeric strings and apply the pattern check to each cell in the DataFrame
-        random_pattern = re.compile(r'^[A-Za-z]{3}-[0-9]{2}-[A-Za-z]{3}$')
-        random_mask = cleaned_data.apply(lambda x: x.map(lambda val: bool(random_pattern.match(str(val)))))
-
-        # Drop rows where all columns have random alphanumeric strings
-        cleaned_data = cleaned_data[~random_mask.all(axis=1)]
-
-        # Convert 'latitude' to numeric, replacing non-numeric values with NaN
-        cleaned_data['latitude'] = pd.to_numeric(cleaned_data['latitude'], errors='coerce')
-
-        # Convert 'opening_date' to datetime, handling different date formats
-        cleaned_data['opening_date'] = pd.to_datetime(cleaned_data['opening_date'], errors='coerce')
-
-        # Convert 'longitude' to numeric, handling non-numeric values
-        cleaned_data['longitude'] = pd.to_numeric(cleaned_data['longitude'], errors='coerce')
-
-        # Specify data types for each column
-        data_types = {
-            "address": "object",
-            "longitude": "float64",
-            "locality": "object",
-            "store_code": "object",
-            "staff_numbers": "object",
-            "opening_date": "datetime64[ns]",
-            "store_type": "object",
-            "latitude": "float64",
-            "country_code": "object",
-            "continent": "object",
-        }
-        
-        # Convert columns to their specified data types
-        cleaned_data = cleaned_data.astype(data_types)
-
-        return cleaned_data
+        return card_data_table
     
+    # Clean store data
+    def clean_store_data(self, store_data):
+        # Reset index to avoid duplicate indices after manipulation
+        store_data = store_data.reset_index(drop=True)
+
+        # Replace 'NULL' values with NaN
+        store_data.replace('NULL', np.NaN, inplace=True)
+
+        # Convert 'opening_date' column to datetime format
+        store_data['opening_date'] = pd.to_datetime(store_data['opening_date'], errors ='coerce')
+
+        store_data.loc[[31, 179, 248, 341, 375], 'staff_numbers'] = [78, 30, 80, 97, 39] # had to find values where it was just a string of letters and replaced them
+
+        # Convert 'staff_numbers' to numeric, drop rows with missing values
+        store_data['staff_numbers'] = pd.to_numeric(store_data['staff_numbers'], errors='coerce')
+        store_data.dropna(subset=['staff_numbers'], axis=0, inplace=True)
+
+        # Clean 'continent' column
+        store_data['continent'] = store_data['continent'].str.replace('eeEurope', 'Europe').str.replace('eeAmerica', 'America')
+
+        return store_data
+    
+    # Convert product weights
     def convert_product_weights(self, products_df):
         def convert_weight(weight):
             try:
@@ -105,67 +81,54 @@ class DataCleaning:
         products_df['weight'] = products_df['weight'].apply(convert_weight)
         return products_df
     
-    def clean_products_data(self, products_df):
-        # Drop the first column (Unnamed: 0)
-        products_df = products_df.iloc[:, 1:]
-        
-        # Remove leading/trailing whitespaces in all string columns
-        products_df = products_df.apply(lambda x: x.str.strip() if x.dtype == "O" else x)
+    # Clean products data
+    def clean_products_data(self, data):
+        # Replace 'NULL' values with NaN
+        data.replace('NULL', np.NaN, inplace=True)
 
-        # Convert 'product_price' column to numeric
-        products_df['product_price'] = pd.to_numeric(products_df['product_price'].str.replace('£', ''), errors='coerce')
+        # Convert 'date_added' column to datetime format
+        data['date_added'] = pd.to_datetime(data['date_added'], errors='coerce')
 
-        # Ensure 'weight' column is treated as string before numeric conversion
-        products_df['weight'] = pd.to_numeric(products_df['weight'].astype(str).str.replace('kg', '').str.replace('g', '').str.replace('ml', '').str.replace(' ', ''), errors='coerce')
+        # Drop rows with missing values in 'date_added'
+        data.dropna(subset=['date_added'], how='any', axis=0, inplace=True)
 
-        # Convert 'date_added' column to datetime
-        products_df['date_added'] = pd.to_datetime(products_df['date_added'], errors='coerce')
+        # Convert 'weight' column to string
+        data['weight'] = data['weight'].astype(str)
 
-        # Handle 'removed' column
-        products_df['removed'] = products_df['removed'].apply(lambda x: False if pd.notna(x) and 'Still_avaliable' in str(x) else True)
+        # Clean 'weight' column by removing spaces after dots
+        data['weight'] = data['weight'].apply(lambda x: x.replace(' .', ''))
 
-        # Drop rows with missing or invalid values
-        cleaned_df = products_df.dropna(subset=['product_name', 'product_price', 'weight', 'category', 'EAN', 'date_added', 'uuid', 'removed', 'product_code'])
+        # Extract numeric values from 'weight' column where it contains 'x'
+        temp_cols = data.loc[data.weight.str.contains('x'), 'weight'].str.split('x', expand=True)
+        numeric_cols = temp_cols.apply(lambda x: pd.to_numeric(x.str.extract('(\d+\.?\d*)', expand=False)), axis=1)
+        final_weight = numeric_cols.prod(axis=1)
+        data.loc[data.weight.str.contains('x'), 'weight'] = final_weight
 
-        return cleaned_df
+        # Lowercase and strip whitespace in 'weight' column
+        data['weight'] = data['weight'].apply(lambda x: str(x).lower().strip())
+
+         # Drop the first column (index column)
+        data.drop(data.columns[0], axis=1, inplace=True)
+
+        return data
     
-    def clean_orders_data(self, orders_df):
-        # Drop the 'level_0' column if it exists
-        cleaned_orders_data = orders_df.drop(columns=['level_0'], errors='ignore')
-
-        # Remove first_name and last_name columns
-        columns_to_remove = ['first_name', 'last_name', '1']
-        cleaned_orders_data = cleaned_orders_data.drop(columns=columns_to_remove, errors='ignore')
-
-        return cleaned_orders_data
-    
-    def clean_date_times_data(self, date_details_data):
+    # Clean date times data
+    def clean_date_times_data(self, data):
         # Convert dictionary to a DataFrame
-        cleaned_date_details_data = pd.DataFrame.from_dict(date_details_data)
+        data = pd.DataFrame.from_dict(data)
 
-        # Concatenate 'year', 'month', 'day', and 'timestamp' columns
-        cleaned_date_details_data['datetime'] = cleaned_date_details_data['year'] + '-' + cleaned_date_details_data['month'] + '-' + cleaned_date_details_data['day'] + ' ' + cleaned_date_details_data['timestamp']
+        # Convert 'year' column to numeric, drop rows with missing values
+        data['year'] = pd.to_numeric(data['year'], errors='coerce')
+        data.dropna(subset=['year'], how='any', axis=0, inplace=True)
 
-        # Convert 'datetime' column to datetime format
-        cleaned_date_details_data['datetime'] = pd.to_datetime(cleaned_date_details_data['datetime'], format='%Y-%m-%d %H:%M:%S', errors='coerce')
-
-        # Drop rows with invalid datetime values
-        cleaned_date_details_data = cleaned_date_details_data.dropna(subset=['datetime'])
-
-        # Extract components and convert to appropriate datatypes
-        cleaned_date_details_data['month'] = cleaned_date_details_data['datetime'].dt.month.astype('Int64')
-        cleaned_date_details_data['year'] = cleaned_date_details_data['datetime'].dt.year.astype('Int64')
-        cleaned_date_details_data['day'] = cleaned_date_details_data['datetime'].dt.day.astype('Int64')
-
-        # Define time periods
-        time_periods = {
-            (0, 6): 'Late_Hours',
-            (6, 12): 'Morning',
-            (12, 18): 'Midday',
-            (18, 24): 'Evening'
-        }
-
-        # Categorize time periods based on hour
-        cleaned_date_details_data['time_period'] = pd.cut(cleaned_date_details_data['datetime'].dt.hour, bins=[0, 6, 12, 18, 24], labels=[period for _, period in time_periods.items()])
-
-        return cleaned_date_details_data
+        return data
+    
+    # Clean orders data
+    def clean_orders_data(self, data):
+        # Drop unnecessary columns
+        data.drop("level_0", axis=1, inplace=True) 
+        data.drop("1", axis=1, inplace=True) 
+        data.drop(data.columns[0], axis=1, inplace=True)
+        data.drop('first_name', axis=1, inplace=True)
+        data.drop('last_name', axis=1, inplace=True)
+        return data
