@@ -26,13 +26,21 @@ This project addresses the need of a multinational company to centralize its sal
 ```plaintext
 multinational-retail-data-centralisation502/
 │
-├── .gitignore
-├── data_cleaning.py
-├── data_extraction.py
-├── database_utils.py
-├── main.py
-└── README.md
-```
+├── table updates/
+    ├── dim_card_details.sql       # Update script for card details dimension table
+    ├── dim_date_times.sql         # Update script for date and time dimension table
+    ├── dim_products.sql           # Update script for products dimension table
+    ├── dim_store_details.sql      # Update script for store details dimension table
+    ├── dim_users_table.sql        # Update script for users dimension table
+    ├── foreign_keys.sql           # Script to add foreign key constraints
+    ├── orders_table.sql           # Update script for the orders table
+    ├── primary_keys.sql           # Script to add primary key constraints
+├── .gitignore                      # Git configuration file for ignored files
+├── data_cleaning.py                # Python script for data cleaning operations
+├── data_extraction.py              # Python script for data extraction operations
+├── database_utils.py               # Python script with utility functions for database operations
+├── main.py                         # Main Python script for running the project
+└── README.md                       # Project documentation
 ## License
 Accessed via the AiCore programme.
 
