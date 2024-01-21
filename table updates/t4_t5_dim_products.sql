@@ -1,6 +1,6 @@
 -- Remove the pound sign in the product price column
 UPDATE dim_products
-SET product_price = REPLACE(product_price, '£', '');
+SET product_price = CAST(SUBSTRING(product_price FROM 2) AS DOUBLE PRECISION);
 
 
 -- Alter the column to a float type
