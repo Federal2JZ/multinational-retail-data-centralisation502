@@ -1,6 +1,7 @@
 import os
 import psycopg2
 
+
 def execute_sql_file(file_path, database_url):
     conn = psycopg2.connect(database_url)
     cursor = conn.cursor()
