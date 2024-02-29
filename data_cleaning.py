@@ -3,11 +3,30 @@ import numpy as np
 
 
 class DataCleaning:
+    """
+    A class for cleaning various types of data.
+    """
+
     def __init__(self, dataframe=None):
+        """
+        Initialize the DataCleaning instance.
+
+        Parameters:
+        - dataframe: The pandas DataFrame to be cleaned.
+        """
         self.dataframe = dataframe
 
     # Clean legacy user data
     def clean_user_data(self, legacy_users_table):
+        """
+        Clean legacy user data.
+
+        Parameters:
+        - legacy_users_table: The DataFrame containing legacy user data.
+
+        Returns:
+        - cleaned_users_table: The cleaned DataFrame of user data.
+        """
         legacy_users_table = legacy_users_table.copy()  # not to get warning SettingWithCopyWarning
 
         # Replace 'NULL' values with NaN
@@ -36,6 +55,15 @@ class DataCleaning:
     
     # Clean card data
     def clean_card_data(self, card_data_table):
+        """
+        Clean card data.
+
+        Parameters:
+        - card_data_table: The DataFrame containing card data.
+
+        Returns:
+        - cleaned_card_data: The cleaned DataFrame of card data.
+        """
         # Replace 'NULL' values with NaN
         card_data_table.replace('NULL', np.NaN, inplace=True)
 
@@ -49,6 +77,15 @@ class DataCleaning:
     
     # Clean store data
     def clean_store_data(self, store_data):
+        """
+        Clean store data.
+
+        Parameters:
+        - store_data: The DataFrame containing store data.
+
+        Returns:
+        - cleaned_store_data: The cleaned DataFrame of store data.
+        """
         # Reset index to avoid duplicate indices after manipulation
         store_data = store_data.reset_index(drop=True)
 
@@ -71,6 +108,15 @@ class DataCleaning:
     
     # Convert product weights
     def convert_product_weights(self, products_df):
+        """
+        Convert product weights to a unified format.
+
+        Parameters:
+        - products_df: The DataFrame containing product data.
+
+        Returns:
+        - converted_products_df: The DataFrame with weights converted to a unified format.
+        """
         def convert_weight(weight):
             try:
                 unit_factors = {'g': 1, 'ml': 0.001, 'k': 1000}
@@ -83,6 +129,15 @@ class DataCleaning:
     
     # Clean products data
     def clean_products_data(self, data):
+        """
+        Clean products data.
+
+        Parameters:
+        - data: The DataFrame containing products data.
+
+        Returns:
+        - cleaned_data: The cleaned DataFrame of products data.
+        """
         # Replace 'NULL' values with NaN
         data.replace('NULL', np.NaN, inplace=True)
 
@@ -114,6 +169,15 @@ class DataCleaning:
     
     # Clean date times data
     def clean_date_times_data(self, data):
+        """
+        Clean date times data.
+
+        Parameters:
+        - data: A dictionary containing date time data.
+
+        Returns:
+        - cleaned_data: The DataFrame of cleaned date time data.
+        """
         # Convert dictionary to a DataFrame
         data = pd.DataFrame.from_dict(data)
 
@@ -125,6 +189,15 @@ class DataCleaning:
     
     # Clean orders data
     def clean_orders_data(self, data):
+        """
+        Clean orders data.
+
+        Parameters:
+        - data: The DataFrame containing orders data.
+
+        Returns:
+        - cleaned_data: The DataFrame of cleaned orders data.
+        """
         # Drop unnecessary columns
         data.drop("level_0", axis=1, inplace=True) 
         data.drop("1", axis=1, inplace=True) 
