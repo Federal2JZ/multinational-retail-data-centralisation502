@@ -33,6 +33,12 @@ This project addresses the need of a multinational company to centralise its sal
     python main.py
     python table_updates.py
     ```
+### Running Specific Functions (Optional)
+You can also specify which function to run from the command line using `argparse`. Here's how:
+```bash
+python main.py <function>
+```
+Replace `<function>` with one of the following options: `stores`, `card_details`, `users`, `products`, `orders`, `date_times`.
 
 3. **Data Querying**: Query the data using the sql files in the Data querying folder.
 
