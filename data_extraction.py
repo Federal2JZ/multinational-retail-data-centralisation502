@@ -98,6 +98,23 @@ class DataExtractor():
         stores_df = pd.DataFrame(stores_data)
         return stores_df
     
+    def fetch_json_data(self, json_url):
+        """
+        Fetch JSON data from a URL.
+
+        Parameters:
+        - json_url: URL of the JSON data.
+
+        Returns:
+        dict: JSON data.
+        """
+        response = requests.get(json_url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print("Failed to fetch JSON data.")
+            return None
+    
     def extract_from_s3(self, s3_address):
         """
         Extract data from a CSV file stored in an S3 bucket.
