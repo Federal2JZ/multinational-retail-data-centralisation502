@@ -3,6 +3,29 @@ import psycopg2
 
 
 def execute_sql_file(file_path, database_url):
+    """
+    Executes SQL queries from a file in a PostgreSQL database.
+
+    Args:
+    - file_path (str): The path to the SQL file containing the queries to execute.
+    - database_url (str): The URL of the PostgreSQL database to connect to.
+
+    Raises:
+    - Exception: If there is an error during the execution of the SQL queries.
+
+    Returns:
+    - None: This function does not return any value.
+
+    This function connects to the specified PostgreSQL database using the provided URL,
+    reads the SQL queries from the file located at `file_path`, and executes each query
+    separately. It commits changes after executing all queries successfully. If any error
+    occurs during the execution of queries, it rolls back the changes and prints an error message.
+
+    Example usage:
+    >>> file_path = "table_updates/t1_orders_table.sql"
+    >>> database_url = "postgresql://username:password@localhost:5432/database_name"
+    >>> execute_sql_file(file_path, database_url)
+    """
     conn = psycopg2.connect(database_url)
     cursor = conn.cursor()
 
