@@ -5,10 +5,13 @@ import requests
 import json
 
 
-def dim_users():
+def initialize_components():
     db_connector = DatabaseConnector()
     data_extractor = DataExtractor()
+    data_cleaning = DataCleaning()
+    return db_connector, data_extractor, data_cleaning
 
+def dim_users():
     # Read legacy_users data from the database
     legacy_users_table_name = "legacy_users"
     legacy_users_data = data_extractor.read_rds_table(db_connector, legacy_users_table_name)
@@ -22,9 +25,6 @@ def dim_users():
 
 
 def dim_card_details():
-    db_connector = DatabaseConnector()
-    data_extractor = DataExtractor()
-
     # Extract data from a PDF file using retrieve_pdf_data method
     pdf_data = data_extractor.retrieve_pdf_data('https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf')
 
@@ -36,10 +36,6 @@ def dim_card_details():
     db_connector.upload_to_db(cleaned_card_details_data, 'dim_card_details')
 
 def dim_stores():
-    data_extractor = DataExtractor()
-    database_connector = DatabaseConnector()
-    data_cleaning = DataCleaning()
-
     # API details
     number_of_stores_endpoint = "https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores"
     retrieve_store_endpoint = "https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details"
@@ -58,13 +54,9 @@ def dim_stores():
         cleaned_store_data = data_cleaning.clean_store_data(stores_data)
 
         # Upload cleaned store data to the database
-        database_connector.upload_to_db(cleaned_store_data, 'dim_store_details')
+        db_connector.upload_to_db(cleaned_store_data, 'dim_store_details')
 
 def dim_products():
-    db_connector = DatabaseConnector()
-    data_extractor = DataExtractor()
-    data_cleaning = DataCleaning()
-
     # Extract data from S3
     products_data = data_extractor.extract_from_s3('s3://data-handling-public/products.csv')
     products_data = data_cleaning.convert_product_weights(products_data)
@@ -80,9 +72,6 @@ def dim_products():
 
     
 def dim_orders():
-    db_connector = DatabaseConnector()
-    data_extractor = DataExtractor()
-
     # List all tables in the database
     tables = db_connector.list_db_tables()
     print("Tables in the database:", tables)
@@ -102,9 +91,6 @@ def dim_orders():
     db_connector.upload_to_db(cleaned_orders_data, target_table_name)
 
 def dim_date_times():
-    db_connector = DatabaseConnector()
-    data_cleaning = DataCleaning()
-
     # Fetch data from the JSON file using requests
     json_url = 'https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json'
     response = requests.get(json_url)
@@ -117,6 +103,7 @@ def dim_date_times():
     db_connector.upload_to_db(cleaned_date_details_data, 'dim_date_times')
 
 if __name__ == "__main__":
+    db_connector, data_extractor, data_cleaning = initialize_components()
     dim_stores()
     dim_card_details()
     dim_users()
