@@ -3,6 +3,7 @@ from data_cleaning import DataCleaning
 from database_utils import DatabaseConnector
 import requests
 import json
+import argparse
 
 
 def initialize_components():
@@ -146,11 +147,25 @@ def dim_date_times():
     # Upload cleaned date details data to the database
     db_connector.upload_to_db(cleaned_date_details_data, 'dim_date_times')
 
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Data Extraction and Cleaning Script")
+    parser.add_argument("function", choices=['stores', 'card_details', 'users', 'products', 'orders', 'date_times'],
+                        help="Specify which function to run: stores, card_details, users, products, orders, date_times")
+    return parser.parse_args()
+
 if __name__ == "__main__":
     db_connector, data_extractor, data_cleaning = initialize_components()
-    dim_stores()
-    dim_card_details()
-    dim_users()
-    dim_products()
-    dim_orders()
-    dim_date_times()
+    args = parse_arguments()
+
+    if args.function == 'stores':
+        dim_stores()
+    elif args.function == 'card_details':
+        dim_card_details()
+    elif args.function == 'users':
+        dim_users()
+    elif args.function == 'products':
+        dim_products()
+    elif args.function == 'orders':
+        dim_orders()
+    elif args.function == 'date_times':
+        dim_date_times()
